@@ -1,6 +1,4 @@
-(* Make sure that load_path contains a path to compute_hol4.hl *)
-(* load_path := "path_to_compute_hol4" :: !load_path *)
-needs "compute_hol4.hl";;
+needs "compute.ml";;
 
 open Compute;;
 

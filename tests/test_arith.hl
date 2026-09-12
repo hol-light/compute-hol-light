@@ -1,5 +1,5 @@
 needs "tests/common.hl";;
-needs "compute_hol4.hl";;
+needs "compute.ml";;
 needs "eval_compile.hl";;
 
 let rws =
