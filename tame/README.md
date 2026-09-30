@@ -4,9 +4,7 @@ A port of Isabelle [tame hypermap enumeration code](https://www.isa-afp.org/entr
 
 See [`test_tame.hl`](test_tame.hl) for an example. 
 
-It is required to have the latest version of the formal inequality [verification tool](https://github.com/monadius/formal_ineqs).
-
-`load_path` should contain paths to `eval_*.hl` and to the root of the formal inequality verification tool (e.g., `needs "eval_compile.hl"` and `needs "new_arith/nat_arith.hl"` should work).
+`load_path` should contain paths to `eval_*.hl` (e.g., `needs "eval_compile.hl"` should work).
 
 ## Main Files
 

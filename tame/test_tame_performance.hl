@@ -13,14 +13,14 @@ reset_all_counters();;
 clear_all_memos();;
 let r1, time1, _ = 
   assert_noexception ~name:"p = 0: all" 
-    (f_tameEnumFilterBounded (numeral `0`) (numeral `400000`)) None;;
+    (f_tameEnumFilterBounded (replace_numerals `0`) (replace_numerals `400000`)) None;;
 
 (* 23478 (6h 31m 18s) (154 times slower than OCaml) *)
 reset_all_counters();;
 clear_all_memos();;
 let r2, time2, _ = 
   assert_noexception ~name:"p = 1: 1_000_000"
-    (f_tameEnumFilterBounded (numeral `1`) (numeral `1000000`)) None;;
+    (f_tameEnumFilterBounded (replace_numerals `1`) (replace_numerals `1000000`)) None;;
 
 time_results();;
 formatted_results();;

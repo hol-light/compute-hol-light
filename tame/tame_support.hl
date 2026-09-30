@@ -1,30 +1,83 @@
 needs "tame/tame_defs.hl";;
 needs "tame/tame_defs_unrolled.hl";;
 
-load_path := "../formal_ineqs" :: !load_path;;
-
-needs "arith_options.hl";;
+needs "Formal_ineqs/arith_options.hl";;
 Arith_options.base := 100;;
 Arith_options.cached := false;;
 
-needs "new_arith/nat_arith.hl";;
+needs "Formal_ineqs/arith/arith_nat.hl";;
 needs "eval_support.hl";;
 
-let f_SUC a opt = trans_opt opt (Nat_arith.nsuc a);;
-let f_PRE a opt = trans_opt opt (Nat_arith.npre a);;
-let f_ADD a b opt = trans_opt opt (Nat_arith.nadd a b);;
-let f_SUB a b opt = trans_opt opt (Nat_arith.nsub a b);;
-let f_MUL a b opt = trans_opt opt (Nat_arith.nmul a b);;
-let f_LE tm1 tm2 opt = trans_opt opt (fst (Nat_arith.nle tm1 tm2));;
-let f_LT tm1 tm2 opt = trans_opt opt (fst (Nat_arith.nlt tm1 tm2));;
-let f_MIN a b opt = trans_opt opt (Nat_arith.nmin a b);;
-let f_MAX a b opt = trans_opt opt (Nat_arith.nmax a b);;
+let f_SUC = 
+  let op = Misc_vars.suc_op_num in
+  fun a opt -> trans_opt opt (Arith_nat.raw_suc_conv_hash (mk_comb (op, a)));;
+let f_PRE = 
+  let op = Misc_vars.pre_op_num in
+  fun a opt -> trans_opt opt (Arith_nat.raw_pre_hash_conv (mk_comb (op, a)));;
+let f_ADD = 
+  let op = Misc_vars.add_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_add_conv_hash (mk_comb (mk_comb (op, a), b)));;
+let f_SUB = 
+  let op = Misc_vars.sub_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_sub_hash_conv (mk_comb (mk_comb (op, a), b)));;
+let f_MUL = 
+  let op = Misc_vars.mul_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_mul_conv_hash (mk_comb (mk_comb (op, a), b)));;
+let f_LE = 
+  let op = Misc_vars.le_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_le_hash_conv (mk_comb (mk_comb (op, a), b)));;
+let f_LT = 
+  let op = Misc_vars.lt_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_lt_hash_conv (mk_comb (mk_comb (op, a), b)));;
+let f_EQ_num = 
+  let op = Misc_vars.eq_op_num in
+  fun a b opt -> trans_opt opt (Arith_nat.raw_eq_hash_conv (mk_comb (mk_comb (op, a), b)));;
 
-let f_EQ_num tm1 tm2 opt = trans_opt opt (fst (Nat_arith.neq tm1 tm2));;
+(* --------------- *)
+(* min and max     *)
+(* --------------- *)
 
-let numeral = Nat_arith.replace_numerals;;
-install_user_printer ("nat", Nat_arith.print_nat);;
-(* install_parser ("nat", Nat_arith.parse_nat);; *)
+let max_case1 = (UNDISCH_ALL o standardize o ARITH_RULE) `(m <= n <=> T) ==> MAX m n = n`;;
+let max_case2 = (UNDISCH_ALL o standardize o ARITH_RULE) `(m <= n <=> F) ==> MAX m n = m`;;
+
+let min_case1 = (UNDISCH_ALL o standardize o ARITH_RULE) `(m <= n <=> T) ==> MIN m n = m`;;
+let min_case2 = (UNDISCH_ALL o standardize o ARITH_RULE) `(m <= n <=> F) ==> MIN m n = n`;;
+
+let f_MAX a b opt =
+  let le_th = f_LE a b None in
+  let th =
+    if rand (concl le_th) = Misc_vars.t_const then
+      let th0 = INST[b, Misc_vars.n_var_num; a, Misc_vars.m_var_num] max_case1 in
+      Misc_functions.MY_PROVE_HYP le_th th0
+    else
+      let th0 = INST[a, Misc_vars.m_var_num; b, Misc_vars.n_var_num] max_case2 in
+      Misc_functions.MY_PROVE_HYP le_th th0 
+  in
+  trans_opt opt th;;
+
+let f_MIN ltm rtm opt =
+  let le_th = f_LE ltm rtm None in
+  let th =
+    if rand (concl le_th) = Misc_vars.t_const then
+      let th0 = INST[ltm, Misc_vars.m_var_num; rtm, Misc_vars.n_var_num] min_case1 in
+      Misc_functions.MY_PROVE_HYP le_th th0
+    else
+      let th0 = INST[rtm, Misc_vars.n_var_num; ltm, Misc_vars.m_var_num] min_case2 in
+      Misc_functions.MY_PROVE_HYP le_th th0
+  in
+  trans_opt opt th;;
+
+let replace_numerals = rand o concl o (DEPTH_CONV Arith_num.NUMERAL_TO_NUM_CONV THENC PURE_REWRITE_CONV[Arith_num.NUM_THM]);;
+let REPLACE_NUMERALS = CONV_RULE (DEPTH_CONV Arith_num.NUMERAL_TO_NUM_CONV THENC PURE_REWRITE_CONV[Arith_num.NUM_THM]);;
+
+let print_nat fmt tm =
+  try
+    let n = Arith_num.raw_dest_hash tm in
+    let str = "'" ^ Num.string_of_num n in
+    Format.pp_print_string fmt str
+  with _ -> failwith "print_nat";;
+
+install_user_printer ("nat", print_nat);;
 
 let standardize = Misc_vars.standardize;;
 let standardize_tm = Misc_vars.standardize_tm;;

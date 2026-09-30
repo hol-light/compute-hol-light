@@ -17,7 +17,7 @@ let tame_default_db ~eliminate_abs () =
     "EQ_LIST", EQ_LIST, [];
     "EQ_FACE", EQ_FACE, [];
   ];
-  add_extra_rule db ("Nat_arith.REPLACE_NUMERALS", Nat_arith.REPLACE_NUMERALS);
+  add_extra_rule db ("REPLACE_NUMERALS", REPLACE_NUMERALS);
   List.iter (add_extra_rewrite db) ["GT", GT; "GE", GE];
   db;;
 

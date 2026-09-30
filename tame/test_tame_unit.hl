@@ -5,7 +5,7 @@ let db, consts = tame_db tame_rules;;
 write_rules_consts db "tame/out.hl" consts;;
 loadt "tame/out.hl";;
 
-let num = Nat_arith.replace_numerals;;
+let num = replace_numerals;;
 
 let graph_tm = num `Graph [] 0 [[Face [1;2] Final]; [Face [3] Nonfinal]] [1;2]`;;
 let graph_tm2 = num `Graph [Face [0; 1; 2; 3] Final; Face [3; 2; 1; 0] Nonfinal] 4

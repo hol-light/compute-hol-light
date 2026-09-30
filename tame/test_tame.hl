@@ -1,11 +1,6 @@
 (* Make sure that load_path contains a path to eval_compile.hl *)
 (* load_path := "path to eval_*.hl" :: !load_path *)
 
-(* Make sure that load_path contains a path to the latest version 
-of formal_ineqs. It can be obtained with:
-git clone https://github.com/monadius/formal_ineqs *)
-(* load_path := "path to formal_ineqs" :: !load_path *)
-
 needs "tests/common.hl";;
 needs "tame/tame_db.hl";;
 
@@ -19,34 +14,34 @@ needs "tame/out.hl";;
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `0`) (numeral `1000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `0`) (replace_numerals `1000`)) None;;
 
 (* 10000 iterations (p = 0): about 240 seconds *)
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `0`) (numeral `10000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `0`) (replace_numerals `10000`)) None;;
 
 (* 1000 iterations (p = 1): about 35 seconds *)
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `1`) (numeral `1000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `1`) (replace_numerals `1000`)) None;;
 
 (* 10000 iterations (p = 1): about 248 seconds *)
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `1`) (numeral `10000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `1`) (replace_numerals `10000`)) None;;
 
 (* 1000 iterations (p = 2): about 35 seconds *)
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `2`) (numeral `1000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `2`) (replace_numerals `1000`)) None;;
 
 (* 1000 iterations (p = 3): about 35 seconds *)
 
 reset_all_counters();;
 clear_all_memos();;
-test 1 (f_tameEnumFilterBounded (numeral `3`) (numeral `1000`)) None;;
+test 1 (f_tameEnumFilterBounded (replace_numerals `3`) (replace_numerals `1000`)) None;;
