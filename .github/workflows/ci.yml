@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # check PRs
+  pull_request:
+    branches:
+      - master
+
+  # check pushes
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-linux:
+    name: hol-light (pinned), Linux
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      runs-on: 'ubuntu-24.04'
+      hol-light-ref: 'cba9198db76e9dfb89cbd653df9412d01f65b22a'
+
+  pinned-macos:
+    name: hol-light (pinned), MacOS
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      runs-on: 'macos-latest'
+      hol-light-ref: 'cba9198db76e9dfb89cbd653df9412d01f65b22a'

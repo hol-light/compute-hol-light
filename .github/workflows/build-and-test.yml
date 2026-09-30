@@ -1,0 +1,95 @@
+name: Build and test
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        description: 'The runner to build on. Linux and MacOS are supported.'
+        type: string
+        default: 'ubuntu-24.04'
+      hol-light-repository:
+        description: 'The HOL Light repository to build against.'
+        type: string
+        default: 'jrh13/hol-light'
+      hol-light-ref:
+        description: 'The HOL Light branch, tag or commit to build against.'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  # opam otherwise asks before letting the system package manager install
+  # depexts, and a prompt in CI is answered 'n' and fails the build.
+  OPAMCONFIRMLEVEL: unsafe-yes
+
+jobs:
+  build-and-test:
+    runs-on: ${{ inputs.runs-on }}
+    name: ${{ inputs.runs-on }}, OCaml 5.4, camlp5 8.04
+    timeout-minutes: 180
+
+    steps:
+      - name: Install opam (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -xe
+          sudo apt-get update
+          sudo apt-get install -y opam xdot
+          opam init -n --bare --disable-sandboxing
+
+      - name: Install opam (MacOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -xe
+          # gmp and pkg-config are what zarith needs to build. Installing them
+          # here rather than letting 'make switch-5' resolve them as opam
+          # depexts keeps the build off the slower path.
+          brew install opam gmp pkg-config
+          opam init -n --bare --disable-sandboxing
+
+      # 'make switch-5' builds ocaml-base-compiler.5.4.0 from source. Caching
+      # opam's download cache avoids refetching the compiler and camlp5 sources.
+      - name: Cache opam downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.opam/download-cache
+          key: opam-download-${{ runner.os }}-${{ runner.arch }}-ocaml-5.4.0-camlp5-8.04.00
+
+      - name: Checkout HOL Light
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.hol-light-repository }}
+          ref: ${{ inputs.hol-light-ref }}
+          path: hol-light
+
+      - name: Checkout this repository
+        uses: actions/checkout@v7
+        with:
+          path: compute-hol-light
+
+      - name: Build HOL Light
+        working-directory: hol-light
+        run: |
+          set -xe
+          make switch-5
+          eval $(opam env)
+          ocaml --version
+          make
+          test -x ./hol.sh
+
+      - name: Run the checks
+        working-directory: compute-hol-light
+        run: |
+          set -xe
+          eval $(opam env --switch "$GITHUB_WORKSPACE/hol-light" --set-switch)
+          make test HOLLIGHT_DIR="$GITHUB_WORKSPACE/hol-light"
+
+      - name: Upload the HOL Light logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: logs-${{ inputs.runs-on }}-${{ inputs.hol-light-ref }}
+          path: compute-hol-light/ci-*.log
+          if-no-files-found: ignore

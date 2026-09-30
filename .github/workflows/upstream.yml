@@ -1,0 +1,35 @@
+name: Upstream HOL Light
+
+# Early warning only. HOL Light master moves independently of this repository,
+# and the compiler here depends on HOL Light internals, so a break in this
+# workflow while ci.yml is green means upstream has drifted away from the pinned
+# revision -- either this repository needs updating, or the pin does.
+#
+# This lives in its own workflow rather than as conditional jobs in ci.yml so
+# that it does not appear among the checks on a push or pull request.
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Every Monday at 06:00 UTC.
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  master-linux:
+    name: hol-light (master), Linux
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      runs-on: 'ubuntu-24.04'
+      hol-light-ref: 'master'
+
+  master-macos:
+    name: hol-light (master), MacOS
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      runs-on: 'macos-latest'
+      hol-light-ref: 'master'

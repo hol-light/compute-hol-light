@@ -1,0 +1,21 @@
+(* Loads the HOL Light file named by the environment variable
+   COMPUTE_HOL_LIGHT_CI_FILE and then prints a sentinel line. Used by
+   scripts/check.sh, which is what "make test" runs.
+
+   HOL Light has no batch mode: its toplevel exits with status 0 even when a
+   phrase raised, so a caller cannot tell success from failure by the exit code
+   alone. Reaching the print below means the toplevel got to the end of its
+   input, and check.sh decides pass or fail by looking for the sentinel, and for
+   the reports HOL Light writes when a load fails, in the log.
+
+   Run this from the root of this repository. HOL Light's default load_path is
+   [.; $], so . resolves the tests/ and tame/ and examples/ files and $ resolves
+   compute.ml and Formal_ineqs/ in the HOL Light directory. The cwd also has to
+   be the repository root because some test files write the OCaml code they
+   generate to a relative path -- tests/out_merge.hl, tame/out.hl -- and load it
+   back. *)
+
+let () =
+  loadt (Sys.getenv "COMPUTE_HOL_LIGHT_CI_FILE");
+  print_string "\nCOMPUTE_HOL_LIGHT_CI_OK\n";
+  flush stdout;;
