@@ -2,6 +2,22 @@
 (* load_path := "path to eval_*.hl" :: !load_path *)
 needs "eval_compile.hl";;
 
+(* Some examples below demonstrate what the compiler cannot do, so they are
+expected to fail. They are wrapped in one of the two functions here, which
+report the failure and carry on instead of stopping the load of this file, and
+raise if the example unexpectedly succeeds. That way this whole file can be
+loaded as a check that the failures are still the ones described. *)
+
+let expect_failure name f =
+  match (try ignore (f ()); None with e -> Some e) with
+  | Some e -> Printf.printf "expected failure -- %s:\n%!" name; e
+  | None -> failwith ("expected " ^ name ^ " to fail, but it succeeded");;
+
+let expect_load_failure name file =
+  use_file_raise_failure := true;
+  Fun.protect ~finally:(fun () -> use_file_raise_failure := false)
+    (fun () -> ignore (expect_failure name (fun () -> loadt file)));;
+
 (*****************************************************************************)
 (* Basic usage                                                               *)
 (*****************************************************************************)
@@ -66,13 +82,15 @@ get final results. *)
 recognized by underlying equational theorems *)
 
 (* Failure: No match *)
-f_SUC `1 + 2` None;;
+expect_failure "f_SUC applied to a term which is not in a normalized form"
+  (fun () -> f_SUC `1 + 2` None);;
 (* This argument is acceptable *)
 f_SUC `BIT0 (BIT1 _0)` None;;
 (* This also works *)
 f_SUC `BIT0 n` None;;
 (* And this fails because f_SUC recursively calls itself for `n` *)
-f_SUC `BIT1 n` None;;
+expect_failure "f_SUC applied to `BIT1 n`"
+  (fun () -> f_SUC `BIT1 n` None);;
 
 (* write_rules_names compiles rules corresponding to the given constant
 names and saves compiled code in a file. 
@@ -96,7 +114,9 @@ write_rules_names db "examples/out_first.hl" [">"; ">="; "SUC"];;
 
 (* But the output file cannot be loaded: f_GT calls f_GE which is
 defined later in the same file *)
-loadt "examples/out_first.hl";;
+expect_load_failure "the file written by write_rules_names for mutually \
+                     recursive rules"
+  "examples/out_first.hl";;
 
 (* One solution is to use a more general function write_rules_consts *)
 write_rules_consts db "examples/out_first.hl" [[`>`; `>=`]; [`SUC`]];;
@@ -309,7 +329,9 @@ let db = add_thms (empty_db "eq") [
 it is enough to have EQ_REFL' rule only to compare pairs of numbers. *)
 let consts = dependencies db tm;;
 write_rules_consts db "examples/out_eq.hl" consts ~term:tm;;
-loadt "examples/out_eq.hl";;
+expect_load_failure "the file written with EQ_REFL' but without the type \
+                     instantiations"
+  "examples/out_eq.hl";;
 
 (* It is necessary to instantiate types of both EQ_REFL' and PAIR_EQ to
 get the desired result *)
@@ -652,7 +674,8 @@ analyze_arg_lists();;
 
 (* If we call a function with bad arguments we do not get an informative
 error message by default *)
-f_fib `BIT0 (BIT1 _0)` None;;
+expect_failure "f_fib applied to bad arguments"
+  (fun () -> f_fib `BIT0 (BIT1 _0)` None);;
 
 (* We can compile functions with better error messages by setting the global
 flag generate_eval_errors *)
@@ -660,10 +683,11 @@ generate_eval_errors := true;;
 write_rules_consts db "examples/out_extra.hl" consts;;
 loadt "examples/out_extra.hl";;
 
-f_fib `BIT0 (BIT1 _0)` None;;
+expect_failure "f_fib applied to bad arguments, with generate_eval_errors"
+  (fun () -> f_fib `BIT0 (BIT1 _0)` None);;
 
-(* Now we can see that the function f_EQ_num cannot evaluate arguments
-`BIT0 (BIT1 _0)` and `0` *)
+(* Now we can see that the function f_LT cannot evaluate arguments
+`BIT0 (BIT1 _0)` and `2` *)
 
 (* Note that when generate_eval_errors := true then all functions are
 not tail recursive *)

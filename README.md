@@ -16,3 +16,18 @@ A port of Isabelle tame hypermap generation code can be found in [tame](tame/). 
 ## Tests
 
 See [tests](tests/)
+
+`make test` loads [tests/all.hl](tests/all.hl),
+[tame/test_tame_unit.hl](tame/test_tame_unit.hl) and the [examples](examples/)
+into HOL Light and checks what they report. It does not build HOL Light: point
+`HOLLIGHT_DIR` at one that is already built, or leave it at its default of a
+sibling checkout.
+
+```
+make HOLLIGHT_DIR=/path/to/hol-light test
+```
+
+`make test-tests`, `make test-tame` and `make test-examples` run the checks of
+one directory only, and `make -j3 test` runs the three in parallel. Every push
+and pull request runs `make test` against a pinned HOL Light revision, on Linux
+and on MacOS.
